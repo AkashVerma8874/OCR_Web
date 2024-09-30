@@ -1,108 +1,139 @@
-# OCR_web
-# Develop and deploy a web-based prototype that demonstrates the ability to perform Optical
-# Character Recognition (OCR) on an uploaded image (in picture format) containing text in both
-# Hindi and English. The web application should also implement a basic keyword search
-#functionality based on the extracted text. The prototype must be accessible via a live URL.
-#Set up the Environment
+# Project Report
 
-#Install the required libraries using pip.
+OCR Image Text Extraction and Keyword Search Application
+Overview
+This project involves the development of a web application using Streamlit that allows users to upload images and extract text from them using Optical Character Recognition (OCR). The application also enables users to search for specific keywords in the extracted text and highlights these keywords for better visibility.
 
-#pip install pytesseract opencv-python pillow numpy matplotlib
-#For Tesseract, you'll need to install the Tesseract executable separately, as it is not a Python library.
 
-#Linux: Install via package manager
-#sudo apt install tesseract-ocr
-#After installation, configure the Tesseract executable in your Python script:
 
-#python
-#Copy code
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Windows
-#Read and Preprocess the Image Use OpenCV to read the image and perform preprocessing like resizing, thresholding, etc., to improve OCR results.
-import cv2
 
-# Load image
-image = cv2.imread('sample_image.png')
+## Features
+Image Upload: Users can upload images in JPEG or PNG formats.
+Text Extraction: The application uses Tesseract OCR to extract text from the uploaded images.
+Keyword Search: Users can input keywords, and the application will highlight these keywords in the extracted text.
+User-Friendly Interface: Built with Streamlit for a seamless user experience.
+Technology Stack
+Python: Programming language used for backend development.
+Streamlit: A Python library to create web applications quickly and easily.
+Pytesseract: Python wrapper for Google’s Tesseract-OCR Engine.
+OpenCV: A library for computer vision tasks.
+Pillow (PIL): Python Imaging Library to handle image processing.
+NumPy: Library for numerical operations on arrays.
+Code Overview
+The main components of the code are as follows:
+## Importing Libraries
 
-# Convert to grayscale
-gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-# Apply thresholding (optional, but often improves results)
-_, threshold_image = cv2.threshold(gray_image, 150, 255, cv2.THRESH_BINARY)
-
-# Show the image (for debugging purposes)
-cv2.imshow('Threshold Image', threshold_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-Run OCR using Tesseract After preprocessing, run OCR on the image using Tesseract.
-
-python
-Copy code
-from PIL import Image
-import pytesseract
-
-# Convert the image to a PIL format for Tesseract
-pil_image = Image.fromarray(threshold_image)
-
-# Perform OCR
-text = pytesseract.image_to_string(pil_image)
-print("Extracted Text:", text)
-Post-Processing the OCR Output You can clean up the extracted text by removing unwanted characters, formatting, or applying any NLP techniques.
-
-python
-Copy code
-import re
-
-# Simple text cleanup
-cleaned_text = re.sub(r'\W+', ' ', text)  # Remove non-word characters
-print("Cleaned Text:", cleaned_text)
-Enhancements (Optional)
-
-Noise Removal: Use filters like Gaussian blur to remove noise from images.
-python
-Copy code
-blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
-Edge Detection: You can use edge detection techniques like Canny edge detection for preprocessing:
-python
-Copy code
-edges = cv2.Canny(gray_image, 100, 200)
-Sample Full Code
-Here is a sample code that integrates all the steps mentioned:
-
-python
-Copy code
-import cv2
 import pytesseract
 from PIL import Image
-import re
+import cv2
+import numpy as np
 
-# Configure Tesseract path (only needed for Windows)
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Function to extract text from an image
+def extract(im):
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    # Use pytesseract to do OCR on the images
+    text = pytesseract.image_to_string(gray)
+    return text
 
-# Load and preprocess the image
-image = cv2.imread('sample_image.png')
-gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-_, threshold_image = cv2.threshold(gray_image, 150, 255, cv2.THRESH_BINARY)
+# Function to highlight keywords in text
+def highlight_keywords(text, keywords):
+    highlighted_text = text
+    for keyword in keywords:
+        if keyword:
+            highlighted_text = highlighted_text.replace(keyword, f"<mark>{keyword}</mark>")
+    return highlighted_text
 
-# Convert to PIL image for Tesseract OCR
-pil_image = Image.fromarray(threshold_image)
+# Streamlit app
+st.title("OCR Image Text Extraction and Keyword Search")
 
-# Perform OCR
-text = pytesseract.image_to_string(pil_image)
+# Upload image file
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-# Post-process the OCR result
-cleaned_text = re.sub(r'\W+', ' ', text)
+if uploaded_file is not None:
+    # Open and display the image
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image.', use_column_width=True)
 
-# Display the extracted text
-print("Extracted Text:", cleaned_text)
-Additional Libraries
-If you need more advanced features like PDF to image conversion or deep learning-based OCR, you can add the following libraries:
 
-pdf2image: For converting PDF files to images
-bash
-Copy code
-pip install pdf2image
-keras-ocr: For deep learning-based OCR
-bash
-Copy code
-pip install keras-ocr
+    # Convert image to a format suitable for OCR
+    image_cv = np.array(image)
+    
+    # Extract text from the image
+    extracted_text = extract(image_cv)
+    
+    # Display extracted text
+    st.subheader("Extracted Text:")
+    st.text_area("Text", extracted_text, height=300)
+
+    # Input for keywords to search
+    keywords_input = st.text_input("Enter keywords to search (comma-separated):")
+    keywords = [kw.strip() for kw in keywords_input.split(",") if kw.strip()]
+
+    # Highlight keywords in the extracted text
+    if keywords:
+        highlighted_text = highlight_keywords(extracted_text, keywords)
+        st.subheader("Search Results:")
+        st.markdown(highlighted_text, unsafe_allow_html=True)
+## Importing Libraries
+
+import pytesseract
+from PIL import Image
+import cv2
+import numpy as np
+
+# Function to extract text from an image
+def extract(im):
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    # Use pytesseract to do OCR on the images
+    text = pytesseract.image_to_string(gray)
+    return text
+
+# Function to highlight keywords in text
+def highlight_keywords(text, keywords):
+    highlighted_text = text
+    for keyword in keywords:
+        if keyword:
+            highlighted_text = highlighted_text.replace(keyword, f"<mark>{keyword}</mark>")
+    return highlighted_text
+
+# Streamlit app
+st.title("OCR Image Text Extraction and Keyword Search")
+
+# Upload image file
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+
+if uploaded_file is not None:
+    # Open and display the image
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image.', use_column_width=True)
+
+
+    # Convert image to a format suitable for OCR
+    image_cv = np.array(image)
+    
+    # Extract text from the image
+    extracted_text = extract(image_cv)
+    
+    # Display extracted text
+    st.subheader("Extracted Text:")
+    st.text_area("Text", extracted_text, height=300)
+
+    # Input for keywords to search
+    keywords_input = st.text_input("Enter keywords to search (comma-separated):")
+    keywords = [kw.strip() for kw in keywords_input.split(",") if kw.strip()]
+
+    # Highlight keywords in the extracted text
+    if keywords:
+        highlighted_text = highlight_keywords(extracted_text, keywords)
+        st.subheader("Search Results:")
+        st.markdown(highlighted_text, unsafe_allow_html=True)
+## Conclusion
+
+This project demonstrates the effective use of Python and various libraries to create an interactive web application for OCR text extraction and keyword search. The user-friendly interface and robust functionality make it a useful tool for anyone needing to process and analyze text from images.
+## Future Enhancements
+Support for Aditional Languages: Implementing multi-language support in Tesseract.
+Image Preprocessing: Adding preprocessing steps to improve OCR accuracy (e.g., image resizing, denoising).
+Exporting Results: Allowing users to download the extracted text and highlighted results.
+Mobile Responsiveness: Improving the app's design for better accessibility on mobile devices.
